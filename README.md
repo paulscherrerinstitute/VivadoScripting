@@ -3,8 +3,8 @@
 ## Maintainer
 Oliver Bründler [oliver.bruendler@psi.ch]
 
-## Authors
-Oliver Bründler [oliver.bruendler@psi.ch]
+## License
+This library is published under [PSI HDL Library License](License.txt), which is [LGPL](LGPL2_1.txt) plus some additional exceptions to clarify the LGPL terms in the context of firmware development.
 
 ## Changelog
 See [Changelog](Changelog.md)
@@ -25,8 +25,8 @@ The required folder structure looks as given below (folder names must be matched
 
 Alternatively the repository [psi\_fpga\_all](https://github.com/paulscherrerinstitute/psi_fpga_all) can be used. This repo contains all FPGA related repositories as submodules in the correct folder structure.
 * Python
-  * [PsiPyUtils](https://github.com/paulscherrerinstitute/PsiPyUtils) 
-  * [VivadoScripting](https://github.com/paulscherrerinstitute/VivadoScripting) 
+  * [PsiPyUtils](https://github.com/paulscherrerinstitute/PsiPyUtils) (2.0.0 or higher)
+  * [**VivadoScripting**](https://github.com/paulscherrerinstitute/VivadoScripting) 
 
 ## External
 * None
