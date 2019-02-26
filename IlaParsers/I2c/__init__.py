@@ -3,3 +3,5 @@
 #  All rights reserved.
 #  Authors: Oliver Bruendler
 ##############################################################################
+
+from .ChipscopeI2cParse import *

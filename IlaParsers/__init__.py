@@ -3,3 +3,5 @@
 #  All rights reserved.
 #  Authors: Oliver Bruendler
 ##############################################################################
+
+from . import I2c

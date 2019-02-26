@@ -25,11 +25,28 @@ The required folder structure looks as given below (folder names must be matched
 
 Alternatively the repository [psi\_fpga\_all](https://github.com/paulscherrerinstitute/psi_fpga_all) can be used. This repo contains all FPGA related repositories as submodules in the correct folder structure.
 * Python
-  * [PsiPyUtils](https://github.com/paulscherrerinstitute/PsiPyUtils) (2.0.0 or higher)
+  * [PsiPyUtils](https://github.com/paulscherrerinstitute/PsiPyUtils) (3.0.0 or higher)
+  	* Can be installed using PIP instead of placing it at this location in the directory structure
   * [**VivadoScripting**](https://github.com/paulscherrerinstitute/VivadoScripting) 
 
 ## External
 * None
+
+# Installation
+to install, use the command below
+
+```
+pip install <root>\dist\VivadoScripting-<version>.tar.gz
+```
+
+Alternatively the package can be used directly as git-submodule (as it was done in the past). This allows for being reverse compatible and do not break projects that depend on using the package as submodule.
+
+# Packaing
+To package the project after making changes, update the version number in *setup.py* and run
+
+```
+python3 setup.py sdist
+```
 
 # Content
 

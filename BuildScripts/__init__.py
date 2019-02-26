@@ -3,3 +3,6 @@
 #  All rights reserved.
 #  Authors: Oliver Bruendler
 ##############################################################################
+
+from .Sdk import *
+from .Vivado import *
