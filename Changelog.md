@@ -1,3 +1,9 @@
+## 4.0.1
+* New Features
+  * None
+* Bugfixes
+  * Created PIP package with correct version number
+
 ## 4.0.0
 * Non-reverse compatible changes
   * Modified *\_\_init\_\_.py* to import classes without specifying their file-name.

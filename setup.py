@@ -16,7 +16,7 @@ class CustomSdist(sdist):
 #Package
 setuptools.setup(
     name="VivadoScripting",
-    version="3.0.0",
+    version="4.0.1",
     author="Oliver Bründler",
     author_email="oliver.bruendler@psi.ch",
     description="Tools to easily script Xilinx vivado from Python",
