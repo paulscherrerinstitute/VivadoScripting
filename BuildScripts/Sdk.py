@@ -13,6 +13,8 @@ from PsiPyUtils.ExtAppCall import ExtAppCall
 import os, sys
 import shutil
 from distutils import dir_util
+import pyparsing as pp
+import glob
 
 class SdkStdErrNotEmpty(Exception):
     pass
@@ -24,6 +26,8 @@ class SdkExitCodeNotZero(Exception):
 # Class Defintion
 ########################################################################################################################
 class Sdk:
+
+
     """
     This class allows building SDK projects from the command line.
 
@@ -61,13 +65,15 @@ class Sdk:
         self.allStdOut = ""
         self._SetPaths()
 
-    def UseExistingWorkspace(self, workspace : str):
+    def UseExistingWorkspace(self, workspace : str, hw_name : str = None, bsp_name : str = None):
         """
         :param workspace:  Path of the workspace to use.
 
         WARNING: This method is deprecated! Use "CreateEmptyWorkspace" and "ImportProjects" instead
         """
         self.workspace = os.path.abspath(workspace)
+        self.hwName = hw_name
+        self.bspName = bsp_name
 
     def CreateEmtpyWorkspace(self, workspace : str):
         """
@@ -92,14 +98,15 @@ class Sdk:
                       errors is disabled, so it shall only be used for debugging purposes.
         """
         importClauses = ""
-        self.hwName = os.path.split(hwPath)[-1]
+        self.hwName = os.path.split(hwPath)[-1] if hwPath is not None else None
         self.hwPath = hwPath
-        self.appName = os.path.split(appPath)[-1]
+        self.appName = os.path.split(appPath)[-1] if appPath is not None else None
         self.appPath = appPath
-        self.bspName = os.path.split(bspPath)[-1]
+        self.bspName = os.path.split(bspPath)[-1] if bspPath is not None else None
         self.bspPath = bspPath
         for path in [hwPath, bspPath, appPath]:
-            importClauses += "importprojects {} \n".format(os.path.abspath(path).replace("\\", "/"))
+            if path is not None:
+                importClauses += "importprojects {} \n".format(os.path.abspath(path).replace("\\", "/"))
         self._RunSdk(importClauses, debug)
 
     def UpdateHwSpec(self, hdfPath : str, debug : bool = False):
@@ -110,11 +117,45 @@ class Sdk:
         :param debug: Optional parameter. If true, the standard output is printed to the console. In this case the automatic checking for
                       errors is disabled, so it shall only be used for debugging purposes.
         """
+
+        # Parse MSS file to restore OS Settings later
+        # .. This is a workaround for the issue that the BSP settings are overwritten by the Xilinx tools.
+        # .. Replacement is done after updating the spec
+        PP_END = pp.CaselessKeyword("END")
+        PP_OS = pp.CaselessKeyword("BEGIN OS") + pp.OneOrMore(pp.Combine(~PP_END + pp.restOfLine())) + PP_END
+        mssFile = glob.glob(os.path.join(self.workspace, self.bspName, "*.mss"))[0]
+        os_block = None
+        with open(mssFile) as f:
+            content = f.read()
+            for t, s, e in PP_OS.scanString(content):
+                os_block = content[s:e]
+
+        #Update HW Spec
         tclStr = ""
         tclStr += "updatehw -hw {} -newhwspec {}\n".format(self.hwName, os.path.abspath(hdfPath).replace("\\","/"))
+        tclStr += "after 1000\n" #Wait for one second to allow the first command to complete
         tclStr += "regenbsp -bsp {}\n".format(self.bspName)
-
         self._RunSdk(tclStr, debug)
+
+        # Restore MSS File, second part of workaround described above
+        with open(mssFile) as f:
+            print("file: " + mssFile)
+            content = f.read()
+            for t, s, e in PP_OS.scanString(content):
+                content = content.replace(content[s:e], os_block)
+                print("replaced \n{} by \n{}".format(content[s:e], os_block))
+        with open(mssFile, "w+") as f:
+            f.write(content)
+
+    def CopyToSrcLoc(self):
+        """
+        Copy the projects from the workspace back to their source locations.
+
+        This is required as workaround for the fact, that XSCT always copies all sources into the project (instead of linking them)
+        """
+        for name, dir in zip((self.hwName, self.bspName, self.appName), (self.hwPath, self.bspPath, self.appPath)):
+            if name is not None:
+                dir_util.copy_tree(self.workspace + "/" + name, dir)
 
     def BuildWorkspace(self, debug : bool = False):
         """
@@ -132,8 +173,7 @@ class Sdk:
         #WORKAROUND: XSCT always copies all sources into the project (instead of linking them). So after building they
         #            must be copied back to ensure the original location contains correct files (e.g. the .mss file
         #            must be stored)
-        for name, dir in zip((self.hwName, self.bspName, self.appName), (self.hwPath, self.bspPath, self.appPath)):
-            dir_util.copy_tree(self.workspace + "/" + name, dir)
+        self.CopyToSrcLoc()
 
     def CreateBitWithSw(self, appBuildConfig: str, procName: str, outFile: str):
         """
