@@ -133,8 +133,6 @@ class Sdk:
         #Update HW Spec
         tclStr = ""
         tclStr += "updatehw -hw {} -newhwspec {}\n".format(self.hwName, os.path.abspath(hdfPath).replace("\\","/"))
-        tclStr += "after 1000\n" #Wait for one second to allow the first command to complete
-        tclStr += "regenbsp -bsp {}\n".format(self.bspName)
         self._RunSdk(tclStr, debug)
 
         # Restore MSS File, second part of workaround described above
@@ -144,6 +142,12 @@ class Sdk:
                 content = content.replace(content[s:e], os_block)
         with open(mssFile, "w+") as f:
             f.write(content)
+
+        #Update BSP
+        tclStr = ""
+        tclStr += "regenbsp -bsp {}\n".format(self.bspName)
+        self._RunSdk(tclStr, debug)
+
 
     def CopyToSrcLoc(self):
         """
