@@ -139,11 +139,9 @@ class Sdk:
 
         # Restore MSS File, second part of workaround described above
         with open(mssFile) as f:
-            print("file: " + mssFile)
             content = f.read()
             for t, s, e in PP_OS.scanString(content):
                 content = content.replace(content[s:e], os_block)
-                print("replaced \n{} by \n{}".format(content[s:e], os_block))
         with open(mssFile, "w+") as f:
             f.write(content)
 
