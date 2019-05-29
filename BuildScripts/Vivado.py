@@ -229,7 +229,7 @@ class Vivado:
     def _RunVivado(self, workDir : str, args : str):
         #Windows
         if sys.platform.startswith("win"):
-            vivadoCmd = "vivado.bat"
+            vivadoCmd = "bin/vivado.bat"
         #Other OS not yet supported
         elif sys.platform.startswith("linux"):
             vivadoCmd = "bin/vivado"
