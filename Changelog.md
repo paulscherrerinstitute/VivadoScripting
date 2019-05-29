@@ -1,8 +1,8 @@
-## 4.0.2
+## 4.1.0
 * New Features
-  * None
+  * Implemented CLI Application for gracefully update hw-spec
 * Bugfixes
-  * Updated BSP without overwriting OS-settings (required for keeping FreeRTOS config)
+  * Updated HW without overwriting OS-settings in BSP (required for keeping FreeRTOS config)
   * Fixed path to vivado binary on windows (before this, the environment variable had to contain the "/bin" at the ned)
 
 ## 4.0.1
