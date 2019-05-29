@@ -1,3 +1,10 @@
+## 4.0.2
+* New Features
+  * None
+* Bugfixes
+  * Updated BSP without overwriting OS-settings (required for keeping FreeRTOS config)
+  * Fixed path to vivado binary on windows (before this, the environment variable had to contain the "/bin" at the ned)
+
 ## 4.0.1
 * New Features
   * None
