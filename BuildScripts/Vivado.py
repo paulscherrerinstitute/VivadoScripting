@@ -10,6 +10,7 @@
 from PsiPyUtils.TempFile import TempFile
 from PsiPyUtils.TempWorkDir import TempWorkDir
 from PsiPyUtils.ExtAppCall import ExtAppCall
+from typing import Iterable
 import os, sys
 
 ########################################################################################################################
@@ -58,15 +59,18 @@ class Vivado:
         """
         self._RunVivado(workDir, "-source {}".format(script))
 
-    def BuildXpr(self, workDir : str, xprName : str, generateBd : bool = False):
+    def BuildXpr(self, workDir : str, xprName : str, generateBd : bool = False, bdNames : Iterable[str] = None):
         """
         Build an XPR project
 
         :param workDir: Working directory for the project (directory the .xpr file is in)
         :param xprName: Name of the XPR file (including extension) to build
-        :param generateBd: If true, all block diagrams in the design are (re-)generated. The re-generation is forced, so
+        :param generateBd: If true, block diagrams in the design are (re-)generated. The re-generation is forced, so
                            they are even re-generated if they are unchanged. Note that re-generatino of BDs is required
                            after checking out an XPR project from a version control system.
+                           Depending on bdNames, either all BDs or only the selected ones are re-generated.
+        :param bdNames: A list of bd-names can be passed (e.g. ["system.bd", "other.bd]) to only re-generate pecific BDs.
+                        If the parameter is omitted, all BDs are regenerated.
         """
         #Clear whs/wns to make sure no old values are read if the compilation fails
         self.whs = None
@@ -79,7 +83,11 @@ class Vivado:
             #Run Implementation
             tcl += "update_compile_order -fileset sources_1\n"
             if generateBd:
-                tcl += "generate_target -force all [get_files -regexp .*bd]\n"
+                if bdNames is None:
+                    tcl += "generate_target -force all [get_files -regexp .*bd]\n"
+                else:
+                    for name in bdNames:
+                        tcl += "generate_target -force all [get_files -regexp .*{}]\n".format(name)
             tcl += "set_param general.maxThreads 1\n" #Workaround for multithreading bug in the xilinx tools (DRC hangs)
             tcl += "reset_run synth_1\n"
             tcl += "launch_runs impl_1 -to_step write_bitstream -jobs 4\n"
