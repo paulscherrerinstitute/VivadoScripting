@@ -133,9 +133,16 @@ class Sdk:
         #Update HW Spec
         tclStr = ""
         tclStr += "updatehw -hw {} -newhwspec {}\n".format(self.hwName, os.path.abspath(hdfPath).replace("\\","/"))
-        self._RunSdk(tclStr, debug)
+        try:
+            self._RunSdk(tclStr, debug)
 
-        # Restore MSS File, second part of workaround described above
+        # Ignore expected error and Restore MSS File, second part of workaround described above
+        except SdkStdErrNotEmpty as e:
+            #Ignore expected error
+            if "ERROR: psu_cortexr5 does not support psu_iou_scntr" in str(e):
+                pass
+            else:
+                raise e
         with open(mssFile) as f:
             content = f.read()
             for t, s, e in PP_OS.scanString(content):
