@@ -15,6 +15,7 @@ import shutil
 from distutils import dir_util
 import pyparsing as pp
 import glob
+from typing import Iterable
 
 class SdkStdErrNotEmpty(Exception):
     pass
@@ -165,6 +166,20 @@ class Sdk:
         for name, dir in zip((self.hwName, self.bspName, self.appName), (self.hwPath, self.bspPath, self.appPath)):
             if name is not None:
                 dir_util.copy_tree(self.workspace + "/" + name, dir)
+
+    def ExecuteXsctCommands(self, commands : Iterable[str] = None, debug : bool = False):
+        """
+        Execute some XSCT commands in the workspace. This is often useful for customization and bug-workarounds.
+
+        :param commands: XSCT commands (iterable containing each command as separate string)
+        :param debug: Optional parameter. If true, the standard output is printed to the console. In this case the automatic checking for
+                      errors is disabled, so it shall only be used for debugging purposes.
+        """
+        if commands is not None:
+            tclStr = ""
+            for cmd in commands:
+                tclStr += "{}\n".format(cmd)
+            self._RunSdk(tclStr, debug)
 
     def BuildWorkspace(self, debug : bool = False):
         """
