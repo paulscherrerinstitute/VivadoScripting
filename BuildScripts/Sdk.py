@@ -15,7 +15,7 @@ import shutil
 from distutils import dir_util
 import pyparsing as pp
 import glob
-from typing import Iterable
+from typing import Iterable, NamedTuple
 
 class SdkStdErrNotEmpty(Exception):
     pass
@@ -23,11 +23,12 @@ class SdkStdErrNotEmpty(Exception):
 class SdkExitCodeNotZero(Exception):
     pass
 
+LibInfo = NamedTuple("LibInfo", [("path", str),("name", str)])
+
 ########################################################################################################################
 # Class Defintion
 ########################################################################################################################
 class Sdk:
-
 
     """
     This class allows building SDK projects from the command line.
@@ -88,13 +89,14 @@ class Sdk:
         os.mkdir(workspace)
         self.UseExistingWorkspace(workspace)
 
-    def ImportProjects(self, hwPath : str, bspPath : str, appPath : str, debug : bool = False):
+    def ImportProjects(self, hwPath : str, bspPath : str, appPath : str, libPaths : Iterable[str] = None, debug : bool = False):
         """
         Import projects into workspace
 
         :param hwPath:  Path to the HW project
         :param bspPath: Path to the BSP project
         :param appPath: Path to the application project
+        :param libPaths: Path to additional library projects (to be built before the application)
         :param debug: Optional parameter. If true, the standard output is printed to the console. In this case the automatic checking for
                       errors is disabled, so it shall only be used for debugging purposes.
         """
@@ -108,6 +110,12 @@ class Sdk:
         for path in [hwPath, bspPath, appPath]:
             if path is not None:
                 importClauses += "importprojects {} \n".format(os.path.abspath(path).replace("\\", "/"))
+        if libPaths is None:
+            libPaths = []
+        self.libInfo = [LibInfo(path=p, name=os.path.split(p)[-1]) for p in libPaths]
+        for li in self.libInfo:
+            importClauses += "importprojects {} \n".format(os.path.abspath(li.path).replace("\\", "/"))
+
         self._RunSdk(importClauses, debug)
 
     def UpdateHwSpec(self, hdfPath : str, debug : bool = False):
@@ -166,6 +174,8 @@ class Sdk:
         for name, dir in zip((self.hwName, self.bspName, self.appName), (self.hwPath, self.bspPath, self.appPath)):
             if name is not None:
                 dir_util.copy_tree(self.workspace + "/" + name, dir)
+        for li in self.libInfo:
+            dir_util.copy_tree(self.workspace + "/" + li.name, li.path)
 
     def ExecuteXsctCommands(self, commands : Iterable[str] = None, debug : bool = False):
         """
@@ -191,6 +201,8 @@ class Sdk:
         tclStr = ""
         tclStr += "projects -clean -type all\n"
         tclStr += "projects -build -type bsp -name {}\n".format(self.bspName)
+        for li in self.libInfo:
+            tclStr += "projects -build -type app -name {}\n".format(li.name)
         tclStr += "projects -build -type app -name {}\n".format(self.appName)
         self._RunSdk(tclStr, debug)
 
