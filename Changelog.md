@@ -1,3 +1,11 @@
+## 4.2.0
+* New Features
+  * Add option to re-generate only selected BDs
+  * Add possibility to run custom XSCT commands (useful for workarounds)
+  * Add option for compiling additional library projects (not only one application project) in SDK 
+* Bugfixes
+  * Stability improvement for BSP regeneration
+
 ## 4.1.0
 * New Features
   * Implemented CLI Application for gracefully update hw-spec
