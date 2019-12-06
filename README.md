@@ -1,6 +1,9 @@
 # General Information
 
 ## Maintainer
+Jonas Purtschert [jonas.purtschert@psi.ch]
+
+## Author
 Oliver Bründler [oliver.bruendler@psi.ch]
 
 ## License
