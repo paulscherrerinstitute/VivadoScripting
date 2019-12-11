@@ -106,6 +106,9 @@ class I2cParser:
 
         #Parse samples
         for nr, line in enumerate(data[1:]):
+            #Skip lines containing radixes (added by newer vivado versions)
+            if line.startswith("Radix"):
+                continue
             parts = line.split(",")
             scl = int(parts[sclIdx].strip())
             sda = int(parts[sdaIdx].strip())
@@ -130,27 +133,28 @@ class I2cParser:
                     state = _State.Idle
             # Rising Edge
             elif scl == 1 and scl_last == 0:
-                if curBit == 8:
-                    ack = not sda
-                    # Address handling
-                    if byteNr is 0:
-                        addr = curByte >> 1
-                        rnw = curByte % 2
-                        if rnw is 0:
-                            acctype = AccessType.Write
+                if state is _State.Running:
+                    if curBit == 8:
+                        ack = not sda
+                        # Address handling
+                        if byteNr is 0:
+                            addr = curByte >> 1
+                            rnw = curByte % 2
+                            if rnw is 0:
+                                acctype = AccessType.Write
+                            else:
+                                acctype = AccessType.Read
+                            curAcc._AddAddr(addr, acctype, ack)
+                            curAcc.address = addr
+                        # Data handling
                         else:
-                            acctype = AccessType.Read
-                        curAcc._AddAddr(addr, acctype, ack)
-                        curAcc.address = addr
-                    # Data handling
+                            curAcc._AddData(curByte, ack)
+                        curBit = 0
+                        curByte = 0x00
+                        byteNr += 1
                     else:
-                        curAcc._AddData(curByte, ack)
-                    curBit = 0
-                    curByte = 0x00
-                    byteNr += 1
-                else:
-                    curByte = curByte * 2 + sda
-                    curBit += 1
+                        curByte = curByte * 2 + sda
+                        curBit += 1
             scl_last = scl
             sda_last = sda
         return accesses
