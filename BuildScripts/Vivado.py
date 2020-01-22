@@ -164,6 +164,32 @@ class Vivado:
             # Execute Vivado
             self._RunVivado(".", "-source __viv.tcl")
 
+    def PackageBdAsIp(self, workDir : str, xprName : str, bdName : str, outputDir : str, vendor : str = "NoVendor"):
+        """
+        Package a block design inside a vivado project as IP. This is useful for building hierarchial projects.
+
+        :param workDir: Working directory for the project (directory the .xpr file is in)
+        :param xprName: Name of the XPR file (including extension) to build
+        :param bdName: Name of the BD to package
+        :param outputDir: Directory to put the IP-Core into
+        :param vendor: Vendor name to use
+        :return: None
+        """
+
+        outAbs = os.path.abspath(outputDir).replace("\\", "/") #Vivado always requires linux paths
+        #Build
+        with TempWorkDir(workDir):
+            #Create vivado tcl
+            tcl = ""
+            tcl += "open_project {}\n".format(xprName)
+            tcl += "ipx::package_project -vendor {} -root_dir {} -library user -taxonomy /UserIP -module {} -import_files -force\n".format(vendor, outAbs, bdName)
+            tcl += "close_project\n"
+            with TempFile("__viv.tcl") as f:
+                f.write(tcl)
+                f.flush()
+                # Execute Vivado
+                self._RunVivado(".", "-source __viv.tcl")
+
     ####################################################################################################################
     # Public Properties
     ####################################################################################################################
