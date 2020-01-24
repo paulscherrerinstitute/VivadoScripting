@@ -10,7 +10,8 @@
 from PsiPyUtils.TempFile import TempFile
 from PsiPyUtils.TempWorkDir import TempWorkDir
 from PsiPyUtils.ExtAppCall import ExtAppCall
-from typing import Iterable
+from typing import Iterable, Dict
+import shutil
 import os, sys
 
 ########################################################################################################################
@@ -164,7 +165,7 @@ class Vivado:
             # Execute Vivado
             self._RunVivado(".", "-source __viv.tcl")
 
-    def PackageBdAsIp(self, workDir : str, xprName : str, bdName : str, outputDir : str, vendor : str = "NoVendor"):
+    def PackageBdAsIp(self, workDir : str, xprName : str, bdName : str, outputDir : str, vendor : str = "NoVendor", addrBlockRenaming : Dict[str, str] = None):
         """
         Package a block design inside a vivado project as IP. This is useful for building hierarchial projects.
 
@@ -173,6 +174,9 @@ class Vivado:
         :param bdName: Name of the BD to package
         :param outputDir: Directory to put the IP-Core into
         :param vendor: Vendor name to use
+        :param addrBlockRenaming: Dictionary containing new names for address blocks based on their base address in the form {"0x1000":"NewName"}.
+                                  This is required because Vivado by default just names the blocks Reg0, Reg1, etc. which
+                                  is not very helpful when defining the address map of the core.
         :return: None
         """
 
@@ -183,12 +187,28 @@ class Vivado:
             tcl = ""
             tcl += "open_project {}\n".format(xprName)
             tcl += "ipx::package_project -vendor {} -root_dir {} -library user -taxonomy /UserIP -module {} -import_files -force\n".format(vendor, outAbs, bdName)
+            if addrBlockRenaming is not None:
+                tcl += "set allBlocks [ipx::get_address_blocks -of_objects [ipx::get_memory_maps * -of_objects [ipx::current_core]] *]\n"
+                for addr, name in addrBlockRenaming.items():
+                    tcl += "foreach block $allBlocks {\n" + \
+                           "  scan [get_property BASE_ADDRESS $block] %x blkAddr\n"+ \
+                           "  if {{ {thisAddr} == $blkAddr}} {{\n".format(thisAddr=int(addr)) + \
+                           "    set_property NAME {{{}}} $block\n".format(name) + \
+                           "  }\n" + \
+                           "}\n"
+            tcl += "ipx::create_xgui_files [ipx::current_core]\n" + \
+                   "ipx::update_checksums [ipx::current_core]\n" + \
+                   "ipx::save_core [ipx::current_core]\n"
             tcl += "close_project\n"
             with TempFile("__viv.tcl") as f:
                 f.write(tcl)
                 f.flush()
                 # Execute Vivado
-                self._RunVivado(".", "-source __viv.tcl")
+                try:
+                    self._RunVivado(".", "-source __viv.tcl")
+                except:
+                    shutil.copy("__viv.tcl", "__failedViv.tcl", )
+                    raise
 
     ####################################################################################################################
     # Public Properties
