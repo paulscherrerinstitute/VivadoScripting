@@ -137,10 +137,10 @@ class I2cParser:
                     if curBit == 8:
                         ack = not sda
                         # Address handling
-                        if byteNr is 0:
+                        if byteNr == 0:
                             addr = curByte >> 1
                             rnw = curByte % 2
-                            if rnw is 0:
+                            if rnw == 0:
                                 acctype = AccessType.Write
                             else:
                                 acctype = AccessType.Read
