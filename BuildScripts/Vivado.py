@@ -145,7 +145,27 @@ class Vivado:
                 f.flush()
                 #Execute Vivado
                 self._RunVivado(".", "-source __viv.tcl")
+                
+    def ExportXsa(self, workDir : str, xprName : str, xsaPath : str):
+        """
+        Export XSA file
 
+        :param workDir: Working directory for the project (directory the .xpr file is in)
+        :param xprName: Name of the XPR file (including extension) to export the .xsa file for
+        :param xsaPath: Path of the XSA file to create
+        """
+        xsaAbs = os.path.abspath(xsaPath).replace("\\", "/")
+        with TempWorkDir(workDir):
+            tcl = ""
+            tcl += "open_project {}\n".format(xprName)
+            tcl += "write_hw_platform -fixed -include_bit -force -file {}\n".format(xsaAbs)
+            tcl += "close_project\n"
+            with TempFile("__viv.tcl") as f:
+                f.write(tcl)
+                f.flush()
+                #Execute Vivado
+                self._RunVivado(".", "-source __viv.tcl")
+                
     def CreateFlashImage(self, bitstreams : dict, outFile : str, flashSizeMb : int, interface : str = "SPIx1"):
         """
         Create a flash image containing multiple bitstreams
