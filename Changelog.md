@@ -1,3 +1,13 @@
+## 4.3.0
+* New Features
+  * Export XSA files for Vitis support with "ExportXsa" function
+  * Add possibility to package BDs as IP
+  * Naming address segments when packaging BD as IP
+* Bugfixes
+  * Fix Example
+  * Fix "Radix" line in I2C ILA Parser
+  * Fix deprecated syntax (use "==" instead of "is")
+
 ## 4.2.0
 * New Features
   * Add option to re-generate only selected BDs
